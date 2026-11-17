@@ -122,7 +122,11 @@ jobs:
           FILE="envs/dev/$SVC/values.yaml"
           for attempt in 1 2 3 4 5; do
             git pull --rebase --quiet origin main
-            mkdir -p "$(dirname "$FILE")"; touch "$FILE"
+            if [ ! -f "$FILE" ]; then
+              # New service: the Backstage template's gitops PR adds this file (pinned to the first SHA).
+              echo "::notice::$FILE is not in gitops yet (service not onboarded). Merge the gitops PR; skipping."
+              exit 0
+            fi
             yq -i '.image.tag = strenv(TAG)' "$FILE"
             git add "$FILE"
             if git diff --cached --quiet; then echo "already at $TAG"; exit 0; fi
