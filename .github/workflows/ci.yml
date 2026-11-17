@@ -90,7 +90,12 @@ jobs:
             exit 0
           fi
           helm package charts/$SVC --destination dist
-          helm push "dist/$SVC-$VERSION.tgz" "$CHART_REPO"
+          # GHCR sometimes answers "Tag ... not found" right after creating a new package; retry.
+          for attempt in 1 2 3 4; do
+            helm push "dist/$SVC-$VERSION.tgz" "$CHART_REPO" && exit 0
+            echo "helm push failed, retrying ($attempt)"; sleep $((attempt * 5))
+          done
+          exit 1
 
   bump-dev:
     if: github.event_name == 'push'
@@ -122,7 +127,12 @@ jobs:
             git add "$FILE"
             if git diff --cached --quiet; then echo "already at $TAG"; exit 0; fi
             git commit -m "dev: $SVC image.tag -> ${TAG:0:7}" -m "From ${{ github.server_url }}/${{ github.repository }}/commit/$TAG"
-            if git push origin HEAD:main; then exit 0; fi
+            if OUT=$(git push origin HEAD:main 2>&1); then echo "$OUT"; exit 0; fi
+            echo "$OUT"
+            if ! grep -qE 'rejected|fetch first|non-fast-forward' <<<"$OUT"; then
+              echo "::error::push to bhumi46/gitops failed and it is not a race. Check that GITOPS_TOKEN has write access (Contents: Read and write) to bhumi46/gitops."
+              exit 1
+            fi
             echo "push raced with another commit, retrying ($attempt)"; git reset --hard --quiet origin/main; sleep $((attempt * 3))
           done
           exit 1
