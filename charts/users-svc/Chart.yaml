@@ -1,0 +1,8 @@
+apiVersion: v2
+name: users-svc
+description: Users API (in-memory).
+type: application
+# Bump this when anything under charts/ changes; CI only publishes versions that don't exist yet.
+version: 0.1.0
+# Default image tag when values don't set image.tag (gitops always pins the commit SHA).
+appVersion: "main"

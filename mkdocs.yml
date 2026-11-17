@@ -1,0 +1,5 @@
+site_name: users-svc
+nav:
+  - Home: index.md
+plugins:
+  - techdocs-core

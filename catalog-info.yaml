@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: users-svc
+  description: Users API (in-memory).
+  annotations:
+    github.com/project-slug: bhumi46/users-svc
+    backstage.io/kubernetes-id: users-svc
+    argocd/app-selector: app.kubernetes.io/name=users-svc
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: experimental
+  owner: group:platform-team
+  system: idp-lab
