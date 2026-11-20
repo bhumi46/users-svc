@@ -103,6 +103,20 @@ jobs:
     runs-on: ubuntu-24.04
     concurrency: bump-dev
     steps:
+      - name: check GITOPS_TOKEN
+        env:
+          GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+        run: |
+          FIX="Set a PAT with Contents: Read and write on bhumi46/gitops: gh secret set GITOPS_TOKEN -R ${{ github.repository }}"
+          if [ -z "$GITOPS_TOKEN" ]; then
+            echo "::error::GITOPS_TOKEN secret is not set in ${{ github.repository }}. $FIX"
+            exit 1
+          fi
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GITOPS_TOKEN" https://api.github.com/repos/bhumi46/gitops)
+          if [ "$CODE" != 200 ]; then
+            echo "::error::GITOPS_TOKEN was rejected by GitHub (HTTP $CODE): expired, revoked, mistyped or no access to bhumi46/gitops. $FIX"
+            exit 1
+          fi
       - uses: actions/checkout@v7.0.1
         with:
           repository: bhumi46/gitops
